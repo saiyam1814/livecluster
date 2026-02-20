@@ -75,7 +75,7 @@ export default function DisplayPage() {
       {phase === "celebration" && (
         <>
           <Fireworks />
-          <DeploymentBanner count={state.users.length} />
+          <DeploymentBanner count={state.users.length} users={state.users} />
         </>
       )}
     </div>

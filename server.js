@@ -9,6 +9,24 @@ const port = parseInt(process.env.PORT || "3000", 10);
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
+// Profanity filter
+const BAD_WORDS = [
+  "fuck", "fucker", "fucking", "fuk",
+  "shit", "shithead", "bullshit",
+  "bitch", "bastard", "cunt",
+  "nigger", "nigga",
+  "faggot", "fag",
+  "whore", "slut",
+  "cock", "dick", "pussy", "ass", "asshole", "arse",
+  "motherfucker", "jackass", "dumbass",
+  "rape", "porn", "nazi",
+];
+
+function containsProfanity(text) {
+  const cleaned = text.toLowerCase().replace(/[^a-z]/g, "");
+  return BAD_WORDS.some((word) => cleaned.includes(word.replace(/[^a-z]/g, "")));
+}
+
 // In-memory state
 const state = {
   users: [],
@@ -31,6 +49,11 @@ app.prepare().then(() => {
 
     socket.on("join", (data, callback) => {
       if (!data.name || data.name.trim().length === 0) {
+        callback({ success: false });
+        return;
+      }
+
+      if (containsProfanity(data.name)) {
         callback({ success: false });
         return;
       }

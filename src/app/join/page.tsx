@@ -3,15 +3,39 @@
 import { useState } from "react";
 import { getSocket } from "@/lib/socket";
 
+const BAD_WORDS = [
+  "fuck", "fucker", "fucking", "fuk", "f*ck",
+  "shit", "shithead", "bullshit",
+  "bitch", "bastard", "cunt",
+  "nigger", "nigga",
+  "faggot", "fag",
+  "whore", "slut",
+  "cock", "dick", "pussy", "ass", "asshole", "arse",
+  "motherfucker", "jackass", "dumbass",
+  "rape", "porn", "nazi",
+];
+
+function containsProfanity(text: string): boolean {
+  const cleaned = text.toLowerCase().replace(/[^a-z]/g, "");
+  return BAD_WORDS.some((word) => cleaned.includes(word.replace(/[^a-z]/g, "")));
+}
+
 export default function JoinPage() {
   const [name, setName] = useState("");
   const [joined, setJoined] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   const handleJoin = () => {
     const trimmed = name.trim();
     if (!trimmed || submitting) return;
 
+    if (containsProfanity(trimmed)) {
+      setError("Please use an appropriate name. Foul language is not allowed.");
+      return;
+    }
+
+    setError("");
     setSubmitting(true);
     const socket = getSocket();
 
@@ -19,6 +43,8 @@ export default function JoinPage() {
       setSubmitting(false);
       if (response.success) {
         setJoined(true);
+      } else {
+        setError("Name not allowed. Please choose a different name.");
       }
     });
   };
@@ -54,13 +80,19 @@ export default function JoinPage() {
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                setError("");
+              }}
               onKeyDown={(e) => e.key === "Enter" && handleJoin()}
               placeholder="e.g. kubectl-master"
               maxLength={30}
               autoFocus
               className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-k8s-blue focus:ring-1 focus:ring-k8s-blue transition-colors"
             />
+            {error && (
+              <p className="mt-2 text-sm text-red-400">{error}</p>
+            )}
           </div>
 
           <button
